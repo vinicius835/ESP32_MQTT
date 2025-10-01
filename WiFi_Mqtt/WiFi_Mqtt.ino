@@ -20,10 +20,10 @@ void setup() {
   Serial.println("Conectando ao broker");
   mqttClient.setServer(brokerUrl.c_str(), port);
   String userId = "ESP-alves9";
-  mqttClient.connect(userId.c_str());
   while(!mqttClient.connected()){
+    mqttClient.connect(userId.c_str());
     Serial.println("Erro de Conexão");
-    delay(500);
+    delay(2000);
   }
     Serial.print("Conectado com sucesso!");
   }
