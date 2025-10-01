@@ -15,17 +15,10 @@ void setup() {
 
 void loop() {
    unsigned long currentMillis = millis();
-if((WiFi.status() != WL_CONNECTED)&& (currentMillis - previousMillis >=interval)){
-  WiFi.disconnect();
-  Serial.println("CONEXÃO PERDIDA");
-  Serial.println("Re-Conectando ");
-  WiFi.disconnect();
-  WiFi.reconnect();
-  previousMillis = currentMillis;
-  if(WiFi.status() == WL_CONNECTED){
-    Serial.println("RE-CONECTADO");
-  }
-  }
+if(WiFi.status() != WL_CONNECTED){
+  Serial.print("Conexão Perdida\n");
+  connectLocalworks(); 
+}
 }
 void connectLocalworks(){
 Serial.println("Iniciando conexão com rede WiFi");
