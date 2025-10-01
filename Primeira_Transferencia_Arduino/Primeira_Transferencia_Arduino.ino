@@ -1,3 +1,4 @@
+<#include WiFi.h>
 const byte trigg_pin = 20;
 const byte echo_pin = 8;
 
