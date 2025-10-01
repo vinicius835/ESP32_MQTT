@@ -1,24 +1,41 @@
 #include <WiFi.h>
-const String SSID = "Iphone";
-const String PSWD = "iot_sul_123";
+const String SSID = "Vi@@";
+const String PSWD = "vinicius";
+unsigned long previousMillis = 0;
+unsigned long interval = 10000;
 void scanLocalworks();
+void connectLocalworks();
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   scanLocalworks();
-  Serial.println("Iniciando conexão com rede WiFi");
+  connectLocalworks();
+
+  }
+
+void loop() {
+   unsigned long currentMillis = millis();
+if((WiFi.status() != WL_CONNECTED)&& (currentMillis - previousMillis >=interval)){
+  WiFi.disconnect();
+  Serial.println("CONEXÃO PERDIDA");
+  Serial.println("Re-Conectando ");
+  WiFi.disconnect();
+  WiFi.reconnect();
+  previousMillis = currentMillis;
+  if(WiFi.status() == WL_CONNECTED){
+    Serial.println("RE-CONECTADO");
+  }
+  }
+}
+void connectLocalworks(){
+Serial.println("Iniciando conexão com rede WiFi");
   WiFi.begin(SSID,PSWD);
   while (WiFi.status() != WL_CONNECTED){
     Serial.print(".");
     delay(200);
   }
   Serial.println("\nConectado!");
-  }
-
-void loop() {
-
 }
-
 void scanLocalworks(){
   Serial.println("Iniciando Scan de redes Wi- Fi");
   int number = WiFi.scanNetworks();
