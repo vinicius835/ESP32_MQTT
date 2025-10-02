@@ -5,7 +5,7 @@ const String PSWD = "vinicius";
 
 const String brokerUrl = "test.mosquitto.org";              //URL do broker (servidor)
 const int port = 1883;                                      //Porta do broker (servidor)
-String mensagem = "";
+
 WiFiClient espClient;                                       //Criando Cliente WiFi
 PubSubClient mqttClient(espClient);                         //Criando Cliente MQTT
 void scanLocalworks();
@@ -24,6 +24,9 @@ void setup() {
 void loop() {
 if(Serial.available() > 0){
   String mensagem = Serial.readStringUntil('\n');
+  mensagem = "Vinicius A:   " + mensagem;
+  mqttClient.publish("AulaIoTSul/Chat",mensagem.c_str());
+
 }
 if(WiFi.status() != WL_CONNECTED){
   Serial.print("Conexão Perdida\n");
@@ -33,8 +36,8 @@ if(!mqttClient.connected()){
   Serial.println("Erro de Conexão no Broker");
   connectBroker();
 }
-mqttClient.publish("AulaIoTSul/Chat",mensagem.c_str());
-delay(1000);
+
+
 mqttClient.loop();
 }
 void connectLocalworks(){
