@@ -31,6 +31,8 @@ if(!mqttClient.connected()){
   Serial.println("Erro de Conexão no Broker");
   connectBroker();
 }
+mqttClient.publish("AulaIoTSul/Chat","oi - alves9");
+delay(1000);
 mqttClient.loop();
 }
 void connectLocalworks(){
