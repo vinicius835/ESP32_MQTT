@@ -10,40 +10,36 @@ WiFiClient espClient;                                       //Criando Cliente Wi
 PubSubClient mqttClient(espClient);                         //Criando Cliente MQTT
 void scanLocalworks();
 void connectLocalworks();
-
+void connectBroker();
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   scanLocalworks();
   connectLocalworks();
-  Serial.println("Conectando ao broker");
-  mqttClient.setServer(brokerUrl.c_str(), port);
-  String userId = "ESP-alves9";
-  userId += String(random(0xffff), HEX);
-  mqttClient.connect(userId.c_str());
-  while(!mqttClient.connected()){
+  connectBroker();
+}
 
-    Serial.println("Erro de Conexão");
-    delay(2000);
-  }
-    Serial.print("Conectado com sucesso!");
-  }
 
 void loop() {
-   unsigned long currentMillis = millis();
+
 if(WiFi.status() != WL_CONNECTED){
   Serial.print("Conexão Perdida\n");
   connectLocalworks(); 
+}
+if(!mqttClient.connected()){
+  Serial.println("Erro de Conexão no Broker");
+  connectBroker();
 }
 mqttClient.loop();
 }
 void connectLocalworks(){
 Serial.println("Iniciando conexão com rede WiFi");
-  WiFi.begin(SSID,PSWD);
+  
   while (WiFi.status() != WL_CONNECTED){
+    WiFi.begin(SSID,PSWD);
     Serial.print(".");
-    delay(200);
+    delay(2000);
   }
   Serial.println("\nConectado!");
 }
@@ -63,3 +59,16 @@ void scanLocalworks(){
     // Serial.printf("Número de redes encontradas: %d\n", number);
   }
 }
+void connectBroker(){
+  Serial.println("Conectando ao broker");
+  mqttClient.setServer(brokerUrl.c_str(), port);
+  String userId = "ESP-alves9";
+  userId += String(random(0xffff), HEX);
+  
+  while(!mqttClient.connected()){
+    mqttClient.connect(userId.c_str());
+    Serial.println(".");
+    delay(200);
+  }
+    Serial.print("Conectado com sucesso!");
+  }
