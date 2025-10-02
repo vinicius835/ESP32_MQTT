@@ -24,7 +24,7 @@ void setup() {
 void loop() {
 if(Serial.available() > 0){
   String mensagem = Serial.readStringUntil('\n');
-  mensagem = "Vinicius A:   " + mensagem;
+  mensagem = "Vinicius A: " + mensagem;
   mqttClient.publish("AulaIoTSul/Chat",mensagem.c_str());
 
 }
@@ -41,7 +41,7 @@ if(!mqttClient.connected()){
 mqttClient.loop();
 }
 void connectLocalworks(){
-Serial.println("Iniciando conexão com rede WiFi");
+  Serial.println("Iniciando conexão com rede WiFi");
   
   while (WiFi.status() != WL_CONNECTED){
     WiFi.begin(SSID,PSWD);
@@ -77,5 +77,17 @@ void connectBroker(){
     Serial.println(".");
     delay(200);
   }
+    mqttClient.subscribe("AulaIoTSul/Chat");
+    mqttClient.setCallback(callback);
+
     Serial.print("Conectado com sucesso!");
   }
+void callback(char* topic, byte* payload, unsigned long length){
+  String resposta = "";
+  for(int i = 0; i < length;i++){
+    // ele vai pegar um byte e  e transformar em letra
+    resposta += (char) payload[i];
+  }
+  // Serial.println("Recebido: " + resposta);
+  Serial.println(resposta);
+}
