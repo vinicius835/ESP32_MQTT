@@ -15,10 +15,11 @@ void setup() {
   Wire.begin(I2C_SDA,I2C_SCK); //Inicia comunicação I2C
   tela.begin(SSD1306_SWITCHCAPVCC, 0x3C); 
   tela.clearDisplay();
-  tela.setTextSize(0.1);
+  tela.setTextSize(2.0);
   tela.setTextColor(SSD1306_WHITE);
   tela.setCursor(0,0);
-  tela.println("");
+  tela.println("Hello Word!");
+  // tela.setCursor(0,0);
   // tela.println("Hello");
   // tela.setCursor(0,32);
   // tela.println("World");
