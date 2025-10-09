@@ -2,8 +2,8 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-const String SSID = "Paulo";
-const String PSWD = "cxos9674";
+const String SSID = "Vi@@";
+const String PSWD = "vinicius";
 
 const String brokerUrl = "test.mosquitto.org";              //URL do broker (servidor)
 const int port = 1883;                                      //Porta do broker (servidor)
@@ -27,18 +27,17 @@ void connectBroker();
 
 Adafruit_SSD1306 tela(SCREEN_WIDTH,SCREEN_HEIGHT, &Wire, -1);
 // OLED
-#include <Adafruit_NeoPixel.h>
+
 #include <ArduinoJson.h>
-#define LEDPIN 8
-#define LEDNUM 1
-#define LEDMODEL NEO_GRB + NEO_KHZ800
-Adafruit_NeoPixel Neo(LEDNUM,LEDPIN,LEDMODEL);
+
+
+String movimento = "";
 //JSON
 const byte trigg_pin = 20;
 const byte echo_pin = 8;
 //SENSOR ULTRASONICO
 
-int sensorPIR = 20; //Pino do sensor de presença
+int sensorPIR = 10; //Pino do sensor de presença
 int leitura = 0; //Variável para armazenar a leitura do sensor
 bool estadoSensor = false; //Variável para armazenar o estado do sensor
 //PIR
@@ -51,21 +50,20 @@ void setup() {
   pinMode(sensorPIR, INPUT); //Define sensorPin como entrada
    pinMode(pot, INPUT);
 
-  Neo.begin();
-  Neo.show();
-  Serial.begin(115200);
-  while (!Serial)
-  continue;
-  JsonDocument doc;
+   // while (!Serial)
+  // continue;
+  delay(1000);
+  // JsonDocument doc;
   
+  // const char* json = "{\"sensor\":\"gps\",\"time\":1351824120,\"data\":[48.756080,2.302038]}";
 
-  DeserializationError error = deserializeJson(doc, json);
+  // DeserializationError error = deserializeJson(doc, json);
 
-  if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.f_str());
-    return;
-  }
+  // if (error) {
+  //   Serial.print(F("deserializeJson() failed: "));
+  //   Serial.println(error.f_str());
+  //   return;
+  // }
 //JSON
   pinMode(echo_pin, INPUT);
   pinMode(trigg_pin, OUTPUT);
@@ -77,9 +75,10 @@ void setup() {
   Wire.begin(I2C_SDA,I2C_SCK); //Inicia comunicação I2C
   tela.begin(SSD1306_SWITCHCAPVCC, 0x3C); 
   tela.clearDisplay();
-  tela.setTextSize(1.5);
+  tela.setTextSize(1.6);
   tela.setTextColor(SSD1306_WHITE);
   tela.setCursor(0,0);
+
   tela.println("I ALWAYS COME BACK!!!!!!!");
   tela.display();
   delay(5000);
@@ -87,19 +86,56 @@ void setup() {
 }
 
 void loop() {
+  unsigned long atual = millis ();
+  String mensagem = "";
+  
+  // JsonDocument doc;
+
   leitura = digitalRead(sensorPIR); //Realiza a leitura do sensor de presença
+  
   //PIR
+    digitalWrite(trigg_pin, LOW); 
+  delayMicroseconds(10);
+  digitalWrite(trigg_pin, HIGH); 
+  delayMicroseconds(10);
+  digitalWrite(trigg_pin, LOW); 
+  delayMicroseconds(10);
+
+  // calcula o tempo da ida + volra do pulso sonoro
+  
   unsigned long duracao = pulseIn(echo_pin, HIGH);
-  int distancia = ((duracao * 340)/2)/10000;
+  //      ⬇️
+  int distancia_cm = ((duracao * 340)/2)/10000;
+  
   //SENSOR ULTRASONICO
-   Serial.println(analogRead(pot));
+
+
+   int limiar_pot = analogRead(pot);
+
+    if(leitura == HIGH){
+      //         ⬇️
+      movimento = true;
+      // doc['movimento'] = movimento;    
+    }else{
+      //                      ⬇️
+      movimento = false;
+      // doc['movimento'] = movimento;    
+      }
+  
   //POTENCIOMETRO
-  if(Serial.available() > 0){
-  String mensagem = leitura.c_str();
+  StaticJsonDocument<200> doc;
+  doc["distancia_cm"] = distancia_cm;
+  doc["movimento"] = movimento;
+  doc["limiar_pot"] = limiar_pot;
+  char buffer[200];
+  serializeJson(doc,buffer);
+  
+  //JSON - ENVIAR
 
-  mqttClient.publish("Carrinho/Cheio/1",mensagem.c_str());
 
-  }
+  mqttClient.publish("Carrinho/Cheio/1",buffer);
+  Serial.println("mensagem enviada");
+  Serial.println(buffer);
   if(WiFi.status() != WL_CONNECTED){
     Serial.print("Conexão Perdida\n");
     connectLocalworks(); 
@@ -109,6 +145,7 @@ void loop() {
     connectBroker();
   }
   mqttClient.loop();
+
 //MQTT
 
 }
