@@ -25,7 +25,7 @@ void connectBroker();
 #define I2C_SCK 6
 #define I2C_SDA 5
 
-// Adafruit_SSD1306 tela(SCREEN_WIDTH,SCREEN_HEIGHT, &Wire, -1);
+
 // OLED
 
 #include <ArduinoJson.h>
@@ -50,20 +50,7 @@ void setup() {
   pinMode(sensorPIR, INPUT); //Define sensorPin como entrada
    pinMode(pot, INPUT);
 
-   // while (!Serial)
-  // continue;
   delay(1000);
-  // JsonDocument doc;
-  
-  // const char* json = "{\"sensor\":\"gps\",\"time\":1351824120,\"data\":[48.756080,2.302038]}";
-
-  // DeserializationError error = deserializeJson(doc, json);
-
-  // if (error) {
-  //   Serial.print(F("deserializeJson() failed: "));
-  //   Serial.println(error.f_str());
-  //   return;
-  // }
 //JSON
   pinMode(echo_pin, INPUT);
   pinMode(trigg_pin, OUTPUT);
@@ -73,14 +60,6 @@ void setup() {
   connectBroker();
 //MQTT
   Wire.begin(I2C_SDA,I2C_SCK); //Inicia comunicação I2C
-  // tela.begin(SSD1306_SWITCHCAPVCC, 0x3C); 
-  // tela.clearDisplay();
-  // tela.setTextSize(1.6);
-  // tela.setTextColor(SSD1306_WHITE);
-  // tela.setCursor(0,0);
-
-  // tela.println("I ALWAYS COME BACK!!!!!!!");
-  // tela.display();
   delay(5000);
 //OLED
 }
@@ -103,10 +82,10 @@ void loop() {
     digitalWrite(trigg_pin, LOW); 
     delayMicroseconds(10);
 
-  // calcula o tempo da ida + volra do pulso sonoro
+  // calcula o tempo da ida + volta do pulso sonoro
   
     unsigned long duracao = pulseIn(echo_pin, HIGH);
-  //      ⬇️
+  
     int distancia_cm = ((duracao * 340)/2)/10000;
   
   //SENSOR ULTRASONICO
@@ -115,13 +94,12 @@ void loop() {
     int limiar_pot = analogRead(pot);
 
     if(leitura == HIGH){
-      //         ⬇️
+      
       movimento = true;
-      // doc['movimento'] = movimento;    
+      
     }else{
-      //                      ⬇️
-      movimento = false;
-      // doc['movimento'] = movimento;    
+      
+      movimento = false; 
       }
   
   //POTENCIOMETRO
@@ -174,7 +152,7 @@ void scanLocalworks(){
       Serial.printf("---- %d - %s | %d db\n",net,WiFi.SSID(net),WiFi.RSSI(net));
       
     }
-    // Serial.printf("Número de redes encontradas: %d\n", number);
+
   }
 }
 void connectBroker(){
@@ -188,21 +166,6 @@ void connectBroker(){
     Serial.println(".");
     delay(200);
   }
-    mqttClient.subscribe("Carrinho/Cheio/1");
-    mqttClient.setCallback(callback);
 
     Serial.print("Conectado com sucesso!");
   }
-void callback(char* topic, byte* payload, unsigned long length){
-  String resposta = "";
-  for(int i = 0; i < length;i++){
-    // ele vai pegar um byte e  e transformar em letra
-    resposta += (char) payload[i];
-  }
-  // Serial.println("Recebido: " + resposta);
-  // tela.clearDisplay();
-  // tela.setCursor(0,0);
-  // tela.println(resposta);
-  // Serial.println(resposta);
-  // tela.display();
-}
