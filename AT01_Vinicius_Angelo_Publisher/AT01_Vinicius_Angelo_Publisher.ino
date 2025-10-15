@@ -25,7 +25,7 @@ void connectBroker();
 #define I2C_SCK 6
 #define I2C_SDA 5
 
-Adafruit_SSD1306 tela(SCREEN_WIDTH,SCREEN_HEIGHT, &Wire, -1);
+// Adafruit_SSD1306 tela(SCREEN_WIDTH,SCREEN_HEIGHT, &Wire, -1);
 // OLED
 
 #include <ArduinoJson.h>
@@ -44,7 +44,7 @@ bool estadoSensor = false; //Variável para armazenar o estado do sensor
 const byte pot = 2;
 
 //POTENCIOMETRO
-
+unsigned long limite_atual = 0;
 void setup() {
   Serial.begin(115200); //Inicializa a comunicação serial
   pinMode(sensorPIR, INPUT); //Define sensorPin como entrada
@@ -73,44 +73,46 @@ void setup() {
   connectBroker();
 //MQTT
   Wire.begin(I2C_SDA,I2C_SCK); //Inicia comunicação I2C
-  tela.begin(SSD1306_SWITCHCAPVCC, 0x3C); 
-  tela.clearDisplay();
-  tela.setTextSize(1.6);
-  tela.setTextColor(SSD1306_WHITE);
-  tela.setCursor(0,0);
+  // tela.begin(SSD1306_SWITCHCAPVCC, 0x3C); 
+  // tela.clearDisplay();
+  // tela.setTextSize(1.6);
+  // tela.setTextColor(SSD1306_WHITE);
+  // tela.setCursor(0,0);
 
-  tela.println("I ALWAYS COME BACK!!!!!!!");
-  tela.display();
+  // tela.println("I ALWAYS COME BACK!!!!!!!");
+  // tela.display();
   delay(5000);
 //OLED
 }
 
 void loop() {
   unsigned long atual = millis ();
-  String mensagem = "";
+  if(atual - limite_atual > 5000 ){
+    limite_atual = atual;
+    String mensagem = "";
   
   // JsonDocument doc;
 
-  leitura = digitalRead(sensorPIR); //Realiza a leitura do sensor de presença
+    leitura = digitalRead(sensorPIR); //Realiza a leitura do sensor de presença
   
-  //PIR
+    //PIR
     digitalWrite(trigg_pin, LOW); 
-  delayMicroseconds(10);
-  digitalWrite(trigg_pin, HIGH); 
-  delayMicroseconds(10);
-  digitalWrite(trigg_pin, LOW); 
-  delayMicroseconds(10);
+    delayMicroseconds(10);
+    digitalWrite(trigg_pin, HIGH); 
+    delayMicroseconds(10);
+    digitalWrite(trigg_pin, LOW); 
+    delayMicroseconds(10);
 
   // calcula o tempo da ida + volra do pulso sonoro
   
-  unsigned long duracao = pulseIn(echo_pin, HIGH);
+    unsigned long duracao = pulseIn(echo_pin, HIGH);
   //      ⬇️
-  int distancia_cm = ((duracao * 340)/2)/10000;
+    int distancia_cm = ((duracao * 340)/2)/10000;
   
   //SENSOR ULTRASONICO
 
 
-   int limiar_pot = analogRead(pot);
+    int limiar_pot = analogRead(pot);
 
     if(leitura == HIGH){
       //         ⬇️
@@ -123,31 +125,31 @@ void loop() {
       }
   
   //POTENCIOMETRO
-  StaticJsonDocument<200> doc;
-  doc["distancia_cm"] = distancia_cm;
-  doc["movimento"] = movimento;
-  doc["limiar_pot"] = limiar_pot;
-  char buffer[200];
-  serializeJson(doc,buffer);
+    StaticJsonDocument<200> doc;
+    doc["distancia_cm"] = distancia_cm;
+    doc["movimento"] = movimento;
+    doc["limiar_pot"] = limiar_pot;
+    char buffer[200];
+    serializeJson(doc,buffer);
   
   //JSON - ENVIAR
 
 
-  mqttClient.publish("Carrinho/Cheio/1",buffer);
-  Serial.println("mensagem enviada");
-  Serial.println(buffer);
-  if(WiFi.status() != WL_CONNECTED){
-    Serial.print("Conexão Perdida\n");
-    connectLocalworks(); 
-  }
-  if(!mqttClient.connected()){
-    Serial.println("Erro de Conexão no Broker");
-    connectBroker();
-  }
-  mqttClient.loop();
+    mqttClient.publish("Carrinho/Cheio/1",buffer);
+    Serial.println("mensagem enviada");
+    Serial.println(buffer);
+    if(WiFi.status() != WL_CONNECTED){
+      Serial.print("Conexão Perdida\n");
+      connectLocalworks(); 
+    }
+    if(!mqttClient.connected()){
+      Serial.println("Erro de Conexão no Broker");
+      connectBroker();
+    }
+    mqttClient.loop();
 
 //MQTT
-
+  }
 }
 void connectLocalworks(){
   Serial.println("Iniciando conexão com rede WiFi");
@@ -198,8 +200,9 @@ void callback(char* topic, byte* payload, unsigned long length){
     resposta += (char) payload[i];
   }
   // Serial.println("Recebido: " + resposta);
-  tela.clearDisplay();
-  tela.setCursor(0,0);
-  tela.println(resposta);
-  tela.display();
+  // tela.clearDisplay();
+  // tela.setCursor(0,0);
+  // tela.println(resposta);
+  // Serial.println(resposta);
+  // tela.display();
 }
