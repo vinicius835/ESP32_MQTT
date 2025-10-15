@@ -8,7 +8,7 @@ const String PSWD = "vinicius";
 const String brokerUrl = "test.mosquitto.org";              //URL do broker (servidor)
 const int port = 1883;                                      //Porta do broker (servidor)
 
-const String topic_1 = "Carrinho/Cheio/1";
+const String topic_1 = "Carrinho/Cheios/1";
 WiFiClient espClient;  
 PubSubClient mqttClient(espClient);
 void scanLocalworks();
@@ -45,6 +45,7 @@ const byte pot = 2;
 
 //POTENCIOMETRO
 unsigned long limite_atual = 0;
+bool estado_funcionando = false;
 void setup() {
   Serial.begin(115200); //Inicializa a comunicação serial
   pinMode(sensorPIR, INPUT); //Define sensorPin como entrada
@@ -66,7 +67,8 @@ void setup() {
 
 void loop() {
   unsigned long atual = millis ();
-  if(atual - limite_atual > 5000 ){
+  estado_funcionando = true;
+  if(atual - limite_atual > 5000 && estado_funcionando == true){
     limite_atual = atual;
     String mensagem = "";
   
@@ -111,9 +113,7 @@ void loop() {
     serializeJson(doc,buffer);
   
   //JSON - ENVIAR
-
-
-    mqttClient.publish("Carrinho/Cheio/1",buffer);
+    mqttClient.publish("Carrinho/Cheios/1",buffer);
     Serial.println("mensagem enviada");
     Serial.println(buffer);
     if(WiFi.status() != WL_CONNECTED){
@@ -127,6 +127,7 @@ void loop() {
     mqttClient.loop();
 
 //MQTT
+  estado_funcionando = false;
   }
 }
 void connectLocalworks(){
@@ -152,7 +153,7 @@ void scanLocalworks(){
       Serial.printf("---- %d - %s | %d db\n",net,WiFi.SSID(net),WiFi.RSSI(net));
       
     }
-
+  
   }
 }
 void connectBroker(){
