@@ -2,8 +2,8 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-const String SSID = "Vi@@";
-const String PSWD = "vinicius";
+const String SSID = "Nome da Rede";
+const String PSWD = "Senha da Rede";
 
 const String brokerUrl = "test.mosquitto.org";              //URL do broker (servidor)
 const int port = 1883;                                      //Porta do broker (servidor)
