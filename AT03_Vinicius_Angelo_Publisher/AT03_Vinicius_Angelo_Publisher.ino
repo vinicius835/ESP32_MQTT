@@ -24,7 +24,7 @@ int angulo = 0;
 const byte trigg_pin = 20;
 const byte echo_pin = 21;
 //SENSOR ULTRASONICO
-
+String status  = "";
 bool estado_millis = false;
 bool estado_millis_loop = false;
 unsigned long negativo_atual = 0;
