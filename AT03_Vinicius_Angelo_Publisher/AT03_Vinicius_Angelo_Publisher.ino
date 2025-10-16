@@ -24,10 +24,7 @@ int angulo = 0;
 const byte trigg_pin = 20;
 const byte echo_pin = 21;
 //SENSOR ULTRASONICO
-#include <ESP32Servo.h>
-Servo servo;
-String status  = "";
-//Esp32Servo
+
 bool estado_millis = false;
 bool estado_millis_loop = false;
 unsigned long negativo_atual = 0;
@@ -45,10 +42,7 @@ void setup() {
   connectBroker();
 //MQTT
 
-  servo.setPeriodHertz(50); // 50Hz padrão para servos
-  servo.attach(15, 500, 2400);
-  servo.write(0);
-// ESP32Servo
+
  pinMode(echo_pin, INPUT);
   pinMode(trigg_pin, OUTPUT);
 //Sensor UltraSonico
@@ -80,13 +74,13 @@ void loop() {
    Serial.println();
     if(sonico < distancia_det_pot){
     //if(sonico < 15){
-    servo.write(90);
+  
     Serial.print("Distancia Detectada");
     negativo_atual = atual;
     status = "proximidade_detectada";
     //}else if(sonico > 15 && atual - negativo_atual > 3000 && estado_millis == true){
       }else if(sonico > distancia_det_pot && atual - negativo_atual > 3000 && estado_millis == true){
-      servo.write(0);
+
   
       negativo_atual = atual;
       estado_millis = false;
