@@ -2,8 +2,8 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-const String SSID = "Vi@@";
-const String PSWD = "vinicius";
+const String SSID = "Rede Wifi";
+const String PSWD = "Senha";
 
 const String brokerUrl = "test.mosquitto.org";              //URL do broker (servidor)
 const int port = 1883;                                      //Porta do broker (servidor)
@@ -22,10 +22,7 @@ String movimento = "";
 const byte pot = 2;
 int angulo = 0;
 //POTENCIOMETRO
-#include <ESP32Servo.h>
-Servo servo;
 
-//ESP32Servo
 unsigned long limite_atual = 0;
 bool estado_funcionando = false;
 void setup() {
@@ -40,9 +37,7 @@ void setup() {
   connectBroker();
 //MQTT
 
-  servo.setPeriodHertz(50); // 50Hz padrão para servos
-  servo.attach(15, 500, 2400);
-// ESP32Servo
+
 
 }
 
@@ -52,7 +47,7 @@ estado_funcionando = true;
 if(atual - limite_atual >1500 && estado_funcionando == true){
     limite_atual = atual;
     int angulo = map(analogRead(pot),0,4095,0,180);
-    servo.write(angulo);
+
 
     StaticJsonDocument<200> doc;
     doc["angulo"] = angulo;
@@ -113,7 +108,5 @@ void connectBroker(){
     Serial.println(".");
     delay(200);
   }
-    mqttClient.subscribe("Carrinho/Cheio/1");
-   
-    Serial.print("Conectado com sucesso!");
-  }
+    mqttClient.subscribe("Carrinho/Cheios/1");
+82
