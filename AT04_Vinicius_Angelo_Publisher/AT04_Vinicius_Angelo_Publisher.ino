@@ -2,8 +2,8 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-const String SSID = "Vi@@";
-const String PSWD = "angel0Vini";
+const String SSID = "Rede";
+const String PSWD = "Senha";
 
 const String brokerUrl = "test.mosquitto.org";              //URL do broker (servidor)
 const int port = 1883;                                      //Porta do broker (servidor)
@@ -15,34 +15,52 @@ void scanLocalworks();
 void connectLocalworks();
 void connectBroker();
 // MQTT
-const byte pino_PIR = 19;
-int leitura_PIR = 0; //Variável para armazenar a leitura do sensor
-bool estadoSensor = false; //Variável para armazenar o estado do sensor
+byte pino_PIR = 15;
+byte leitura_PIR = 0; //Variável para armazenar a leitura do sensor
+const byte pino_LED = 20;
 //PIR
 
 String evento ="";
+unsigned long atual_ciclo = 0;
+bool estado_millis = false;
+byte ciclo = 0;
+byte alerta = 0;
 //VARIAVEIS
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(pino_PIR,INPUT);
+  pinMode(pino_LED, OUTPUT);
+  digitalWrite(pino_LED, LOW);
 
 }
 
 void loop() {
+  unsigned long atual = millis();
   // put your main code here, to run repeatedly:
-  leitura_PIR = analogRead(pino_PIR);
-  if(leitura_PIR == true){
-    Serial.println("movimento");
-    evento = "movimento";
-
-  } else if(leitura_PIR == false){
-    Serial.println("movimento");
+  if(atual - atual_ciclo > 200 && estado_millis == true ){
+  atual_ciclo = atual;
+  estado_millis = false;
+  leitura_PIR = digitalRead(pino_PIR);
+  if(leitura_PIR == HIGH){
+    
+    Serial.println("movimento detectado");
+    evento = "movimento_detectado";
+    digitalWrite(pino_LED, HIGH);
+    delay(500);
+    alerta = alerta +1;
+  } else if(alerta > 5){
+    pisca_pisca();
+    delay(500);
+    pisca_pisca();
+  }else{
+    Serial.println("nada detectado");
     evento = "nada_detectado";
-
+    delay(100);
+ 
   }
 
-  StaticJsonDocument<200> doc
+  StaticJsonDocument<200>doc;
     doc["evento"] = evento;
      char buffer[200];
     serializeJson(doc,buffer);
@@ -60,6 +78,15 @@ void loop() {
       connectBroker();
     }
     mqttClient.loop();
+  }
+  ciclo= ciclo +1;
+  if(ciclo > 15 ){
+    alerta = 0;
+    ciclo = 0;
+    delay(10);
+  }
+  estado_millis = true;
+  delay(100);
 }
 void connectLocalworks(){
   Serial.println("Iniciando conexão com rede WiFi");
@@ -108,16 +135,31 @@ void connectBroker(){
     // ele vai pegar um byte e  e transformar em letra
     resposta += (char) payload[i];
   }
+ StaticJsonDocument<200>doc;
  DeserializationError error = deserializeJson(doc, resposta);
   if(!error){
     
     String limiar = doc["comando"];
     Serial.println("...");
     if(limiar == "reset"){
-      analogWrite(pino_LED, 255);
+      digitalWrite(pino_LED, LOW);
+      delay(500);
+      Serial.println("Led Desligado");
     }
-    else{
-      analogWrite(pino_LED, 0);
-    }
-  }
+  
+}
+}
+void pisca_pisca(){
+  digitalWrite(pino_LED,HIGH);
+  delay(500);
+  digitalWrite(pino_LED,LOW);
+  delay(500);
+  digitalWrite(pino_LED,HIGH);
+  delay(500);
+  digitalWrite(pino_LED,LOW);
+  delay(500);
+  digitalWrite(pino_LED,HIGH);
+  delay(500);
+  digitalWrite(pino_LED,LOW);
+  delay(500);
 }
