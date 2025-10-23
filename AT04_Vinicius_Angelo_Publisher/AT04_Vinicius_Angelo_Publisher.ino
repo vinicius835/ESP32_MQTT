@@ -2,8 +2,8 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-const String SSID = "Rede";
-const String PSWD = "Senha";
+const String SSID = "Vini@@";
+const String PSWD = "viniciusA";
 
 const String brokerUrl = "test.mosquitto.org";              //URL do broker (servidor)
 const int port = 1883;                                      //Porta do broker (servidor)
@@ -38,7 +38,7 @@ void setup() {
 void loop() {
   unsigned long atual = millis();
   // put your main code here, to run repeatedly:
-  if(atual - atual_ciclo > 200 && estado_millis == true ){
+  if(atual - atual_ciclo > 400 && estado_millis == true ){
   atual_ciclo = atual;
   estado_millis = false;
   leitura_PIR = digitalRead(pino_PIR);
@@ -49,10 +49,12 @@ void loop() {
     digitalWrite(pino_LED, HIGH);
     delay(500);
     alerta = alerta +1;
-  } else if(alerta > 5){
+  } else if(alerta >4){
     pisca_pisca();
     delay(500);
     pisca_pisca();
+    Serial.println("movimento insistente");
+    evento = "movimento_insistente";
   }else{
     Serial.println("nada detectado");
     evento = "nada_detectado";
