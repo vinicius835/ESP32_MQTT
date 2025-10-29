@@ -1,16 +1,26 @@
 #include <WiFi.h>
+#include <WiFiUdp.h>
+#include <NTPClient.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
+
+
 const String SSID = "Vini@@";
 const String PSWD = "viniciusA";
 
 const String brokerUrl = "test.mosquitto.org";              //URL do broker (servidor)
 const int port = 1883;                                      //Porta do broker (servidor)
 
-const String LWTTopic = "TDESI1v1/Placa100/status";
-const String LWTTopic_2 = "TDESI1v1/Placa200/status";
+const String LWTTopic = "TDESI1v1/Placa1/vini_paulo/status";
+const String LWTTopic_2 = "TDESI1v1/Placa2/bruno/status";
 
-const String LWTMessage = "Placa 1 : OFFLINE";
+const String LWTMessage = "Offline";
 const int  LWTQoS = 1;
+ bool estado_status = false;
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP,"pool.ntp.org",-10800,60000);
+
+
 //OLED
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -18,10 +28,11 @@ const int  LWTQoS = 1;
 #define SCREEN_WIDTH 128 //Largura da tela em px
 #define SCREEN_HEIGHT 64 //Altura da tela em px
 
-#define I2C_SCK 8
-#define I2C_SDA 10
+#define I2C_SCK 22
+#define I2C_SDA 21
 Adafruit_SSD1306 tela(SCREEN_WIDTH,SCREEN_HEIGHT, &Wire, -1);
 //OLED
+String placa2 = "[NADA_CONECTADOR]";
 
 WiFiClient espClient;                                       //Criando Cliente WiFi
 PubSubClient mqttClient(espClient);                         //Criando Cliente MQTT
@@ -39,18 +50,20 @@ void setup() {
   Wire.begin(I2C_SDA,I2C_SCK); //Inicia comunicação I2C
   tela.begin(SSD1306_SWITCHCAPVCC, 0x3C); 
   tela.clearDisplay();
-  tela.setTextSize(1.0);
+  tela.setTextSize(0.2);
   tela.setTextColor(SSD1306_WHITE);
   tela.setCursor(0,0);
-  tela.println("Hello World!");
+  tela.println("Aguarde");
    tela.display();
    delay(100);
-   tela.clearDisplay();
-   delay(100);
+
+   timeClient.begin();
+   timeClient.setTimeOffset(12780);
 }
 
 
 void loop() {
+timeClient.update();
 
 if(WiFi.status() != WL_CONNECTED){
   Serial.print("Conexão Perdida\n");
@@ -60,11 +73,11 @@ if(!mqttClient.connected()){
   Serial.println("Erro de Conexão no Broker");
   connectBroker();
 }
-mqttClient.publish("AulaIoTSul/Chat","oi - alves9");
+// lcd();
 delay(1000);
 mqttClient.loop();
-tela.setCursor(10,10);
-tela.println("OLÁ");
+tela.setCursor(70,70);
+tela.println(timeClient.getFormattedTime());
 
 }
 
@@ -106,8 +119,9 @@ void connectBroker(){
     Serial.println(".");
     delay(200);
   }
-    
-    mqttClient.publish(LWTTopic.c_str(),"PLACA 1: ONLINE",true);
+    bool estado_status = true;
+    mqttClient.publish(LWTTopic.c_str(),"Online",true);
+    Serial.println("Conectado com sucesso no Broker! - Placa 1");
     mqttClient.subscribe(LWTTopic_2.c_str(),1);
     mqttClient.setCallback(callback);
 
@@ -119,16 +133,58 @@ void connectBroker(){
     // ele vai pegar um byte e  e transformar em letra
     resposta += (char) payload[i];
   }
+  StaticJsonDocument<200>doc;
+ DeserializationError error = deserializeJson(doc, resposta);
+  if(!error){
+    
+    String placa2 = doc["status"];
+    Serial.println("...");
+    tela.clearDisplay();
+    timeClient.update();
+    delay(100);
+    tela.setCursor(0,0);
+    tela.println("SISTEMA DE MONITORAMENTO");
+    tela.setCursor(0,10);
+    tela.print("Placa 1: ");
+    if(estado_status == true){
+      tela.print("Online");
+    }else{tela.print("Offline");}
+    tela.println(LWTMessage);
+    tela.setCursor(0,20);
+    tela.print("Placa 2: ");
+    tela.println(placa2);
+    tela.setCursor(0,30);
+    tela.setCursor(0,40);
+    tela.println("Ultima Atualizacao");
+    tela.setCursor(0,50);
+    tela.println(timeClient.getFormattedTime());
+    tela.display();
+    delay(700);
 
+    tela.display();
+  }
+}
+void lcd(){
+  tela.clearDisplay();
+  timeClient.update();
   delay(100);
   tela.setCursor(0,0);
-  tela.println("Sistema de Manutenção");
-  tela.setCursor(20,10);
-  tela.println(resposta);
-  tela.setCursor(30,5);
-  tela.println(LWTMessage);
-  tela.display();
-  delay(100);
-  tela.clearDisplay();
+  tela.println("sistema de monitoramento");
+  tela.setCursor(0,10);
+  tela.print("Placa 1: ");
 
+  tela.println(LWTMessage);
+  tela.setCursor(0,20);
+  tela.print("Placa 2: ");
+  tela.println(placa2);
+
+  tela.setCursor(0,30);
+  
+  tela.println("Ultima Atualizacao");
+  tela.setCursor(0,50);
+  tela.println(timeClient.getFormattedTime());
+  tela.display();
+  delay(700);
+
+  tela.display();
 }
