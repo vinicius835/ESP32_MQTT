@@ -33,15 +33,15 @@ NTPClient timeClient(ntpUDP,"pool.ntp.org",3600,60000);
 #define I2C_SDA 21
 Adafruit_SSD1306 tela(SCREEN_WIDTH,SCREEN_HEIGHT, &Wire, -1);
 //OLED
-String placa2 = "[NADA_CONECTADO]";
-String placa1 = "[NADA_CONECTADO]";
+// String placa2 = "[NADA_CONECTADO]";
+
 WiFiClient espClient;                                       //Criando Cliente WiFi
 PubSubClient mqttClient(espClient);                         //Criando Cliente MQTT
 void scanLocalworks();
 void connectLocalworks();
 void connectBroker();
 
-
+StaticJsonDocument<200>doc;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -85,14 +85,13 @@ mqttClient.loop();
 
 void connectLocalworks(){
 Serial.println("Iniciando conexão com rede WiFi");
-  
+
   while (WiFi.status() != WL_CONNECTED){
-    placa1 = "Offline";
-    placa2 = placa2_var();
-    oled(placa1,placa2);
+
     WiFi.begin(SSID,PSWD);
     Serial.print(".");
     delay(2000);
+    
   }
   Serial.println("\nConectado!");
 }
@@ -117,24 +116,25 @@ void connectBroker(){
   mqttClient.setServer(brokerUrl.c_str(), port);
   String userId = "ESP-alves9";
   userId += String(random(0xffff), HEX);
-  
+
+  doc["status"] = LWTMessage;
+  char buffer[200];
+  serializeJson(doc,buffer);
+
   while(!mqttClient.connected()){
-    mqttClient.connect(userId.c_str(),"","",LWTTopic.c_str(),LWTQoS,true,LWTMessage.c_str());
-    placa1 = "Offline";
-    placa2 = placa2_var();
-    oled(placa1,placa2);
+    mqttClient.connect(userId.c_str(),"","",LWTTopic.c_str(),LWTQoS,true,buffer);
+     
     Serial.println(".");
-    delay(2000);
+    delay(200);
   }
-    estado_status = true;
-    mqttClient.publish(LWTTopic.c_str(),"Online",true);
+    
+    doc["status"] = "Online";
+    serializeJson(doc, buffer);
+
+    mqttClient.publish(LWTTopic.c_str(),buffer,true);
     Serial.println("Conectado com sucesso no Broker! - Placa 1");
     mqttClient.subscribe(LWTTopic_2.c_str(),1);
     mqttClient.setCallback(callback);
-
-    placa1 = "Online";
-    placa2 = placa2_var();
-    oled(placa1,placa2);
     Serial.print("Conectado com sucesso!");
   }
     
@@ -145,32 +145,23 @@ void connectBroker(){
     resposta += (char) payload[i];
   }
   StaticJsonDocument<200>doc;
- DeserializationError error = deserializeJson(doc, resposta);
+  DeserializationError error = deserializeJson(doc, resposta);
   if(!error){
     
     String placa2 = doc["status"];
-    placa2_var(placa2);
+    oled(placa2);
+    if(!mqttClient.connected() || WiFi.status() != WL_CONNECTED){
+    Serial.print("Foi");
+    }
+    else{
+      Serial.print("Não Foi");
+    }
 
-    placa1 = placa1_var();
-    Serial.println(placa2);
-
-    oled(placa2,placa1);
   }
 }
-void placa1_var(String placa1){
-  placa1 = placa1;
-}
-String placa1_var(){
- return placa1;
-}
-void placa2_var(String placa2){
-  placa2 = placa2;
- 
-}
-String placa2_var(){
- return placa2;
-}
-void oled(String placa2,String placa1){
+
+
+void oled(String placa2){
  Serial.println("...");
     tela.clearDisplay();
     timeClient.update();
@@ -179,7 +170,12 @@ void oled(String placa2,String placa1){
     tela.print("Sistema Monitoramento");
     tela.setCursor(0,15);
     tela.print("Placa 1: ");
-    tela.print(placa1);
+    if(!mqttClient.connected() || WiFi.status() != WL_CONNECTED){
+      tela.print("Offline");
+    }
+    else{tela.print("Online");
+    }
+
     tela.setCursor(0,25);
     tela.print("Placa 2: ");
     tela.println(placa2);
